@@ -1,0 +1,1 @@
+src/fugue/_version.py export-subst
