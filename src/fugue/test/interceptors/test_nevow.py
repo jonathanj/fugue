@@ -3,8 +3,7 @@ from nevow.appserver import NevowRequest
 from testtools import TestCase
 from testtools.matchers import AfterPreprocessing as After
 from testtools.matchers import ContainsDict, Equals, Is
-from twisted.internet.address import IPv4Address
-from twisted.test.proto_helpers import StringTransport
+from twisted.web.test.requesthelper import DummyChannel
 
 from fugue.interceptors.nevow import _nevow_request_to_request_map
 
@@ -14,17 +13,9 @@ def fakeNevowRequest(method='GET', body=b'', is_secure=False,
     """
     Create a fake `NevowRequest` instance for the purposes of testing.
     """
-    class FakeChannel(object):
-        def __init__(self, transport):
-            self.transport = transport
-            self.isSecure = lambda: is_secure
-            self.getPeer = transport.getPeer
-            self.getHost = transport.getHost
-
-    port = 443 if is_secure else 80
-    channel = FakeChannel(StringTransport(
-        peerAddress=IPv4Address('TCP', '192.168.0.1', 54321),
-        hostAddress=IPv4Address('TCP', '10.0.0.1', port)))
+    channel = DummyChannel()
+    if is_secure:
+        channel.transport = DummyChannel.SSL()
     request = NevowRequest(channel=channel)
     request.method = method
     request.uri = uri
@@ -60,7 +51,7 @@ class NevowRequestToRequestMapTests(TestCase):
                 'character_encoding': Is(None),
                 'headers': Equals({b'Content-Length': [0],
                                    b'X-Foo': [b'bar']}),
-                'remote_addr': Equals(b'192.168.0.1'),
+                'remote_addr': Equals(b'192.168.1.1'),
                 'request_method': Equals(b'GET'),
                 'server_name': Equals(b'10.0.0.1'),
                 'server_port': Equals(80),
