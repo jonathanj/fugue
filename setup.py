@@ -22,6 +22,7 @@ setup(
     author_email='jonathan@jsphere.com',
     maintainer='Jonathan Jacobs',
     maintainer_email='jonathan@jsphere.com',
+    include_package_data=True,
     long_description=read('README.rst'),
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
