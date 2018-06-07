@@ -1,2 +1,5 @@
+include README.rst LICENSE tox.ini .coveragerc setup.cfg
+graft src
+graft src/fugue/test/interceptors/http/data
 include versioneer.py
 include src/fugue/_version.py

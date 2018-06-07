@@ -18,7 +18,7 @@ def _import_nevow():
       - Requiring Nevow on importing the module;
       - Masking the import error if Nevow is not installed but
         `nevow_adapter_resource` is called.
-      - Definining `_NevowAdapterResource` more than once.
+      - Defining `_NevowAdapterResource` more than once.
     """
     global _NevowAdapterResource
     if _NevowAdapterResource is not None:
