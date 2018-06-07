@@ -2,7 +2,6 @@ import uuid
 
 from pyrsistent import dq, field, PRecord, v
 from twisted.internet.defer import maybeDeferred, succeed
-from twisted.python.failure import Failure
 
 from fugue._keys import ERROR, EXECUTION_ID, QUEUE, STACK, SUPPRESSED, TERMINATORS
 
@@ -11,7 +10,7 @@ class Error(PRecord):
     """
     An error that occured, in an interceptor, during context execution.
     """
-    failure = field(mandatory=True, type=Failure)
+    failure = field(mandatory=True)
     execution_id = field(mandatory=True)
     interceptor = field(type=(str, unicode))
     stage = field(mandatory=True, type=(str, unicode))

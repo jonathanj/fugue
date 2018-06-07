@@ -1,11 +1,14 @@
 from hyperlink import URL
-from nevow.appserver import NevowRequest
-from testtools import TestCase
+from testtools import TestCase, try_import
 from testtools.matchers import AfterPreprocessing as After
 from testtools.matchers import ContainsDict, Equals, Is
 from twisted.web.test.requesthelper import DummyChannel
 
 from fugue.interceptors.nevow import _nevow_request_to_request_map
+from fugue.test.util import depends_on
+
+
+NevowRequest = try_import('nevow.appserver.NevowRequest')
 
 
 def fakeNevowRequest(method='GET', body=b'', is_secure=False,
@@ -36,6 +39,7 @@ class NevowRequestToRequestMapTests(TestCase):
     """
     Tests for `_nevow_request_to_request_map`.
     """
+    @depends_on('nevow')
     def test_basic(self):
         """
         Test basic request map keys.
@@ -58,6 +62,7 @@ class NevowRequestToRequestMapTests(TestCase):
                 'scheme': Equals(b'http'),
                 'uri': Equals(URL.from_text(u'http://example.com/one'))}))
 
+    @depends_on('nevow')
     def test_scheme(self):
         """
         ``scheme`` is set according to whether the request is secure.
@@ -73,6 +78,7 @@ class NevowRequestToRequestMapTests(TestCase):
             ContainsDict({
                 'scheme': Equals(b'https')}))
 
+    @depends_on('nevow')
     def test_content_type(self):
         """
         ``Content-Type`` header is extracted.
@@ -85,6 +91,7 @@ class NevowRequestToRequestMapTests(TestCase):
             ContainsDict({
                 'content_type': Equals(b'text/plain;charset=utf-8')}))
 
+    @depends_on('nevow')
     def test_character_encoding(self):
         """
         Character encoding is extracted from ``Content-Type``, if available.
@@ -97,6 +104,7 @@ class NevowRequestToRequestMapTests(TestCase):
             ContainsDict({
                 'character_encoding': Equals(b'utf-8')}))
 
+    @depends_on('nevow')
     def test_body(self):
         """
         ``body`` is a file-like containing the request content.
