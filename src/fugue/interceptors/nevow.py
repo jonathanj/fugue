@@ -117,7 +117,8 @@ def _leave_nevow(request_key):
 
         response = context.get(RESPONSE)
         if response is None:
-            _send_error(context, 'Internal server error: no response')
+            _send_error(
+                context, 'Internal server error: no response', request_key)
             return succeed(context)
         body = response.get('body')
         d = body if isinstance(body, Deferred) else succeed(body)
