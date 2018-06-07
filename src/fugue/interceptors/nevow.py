@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import cgi
 
 from hyperlink import URL
@@ -62,11 +64,11 @@ def _nevow_request_to_request_map(req):
     )
 
 
-def _send_response(context):
+def _send_response(context, request_key):
     """
     Write a response to the network.
     """
-    req = context[NEVOW_REQUEST]
+    req = context[request_key]
     response = context[RESPONSE]
     req.setResponseCode(response['status'])
     for k, v in response.get('headers', []):
@@ -74,7 +76,7 @@ def _send_response(context):
     req.write(response['body'])
 
 
-def _send_error(context, message):
+def _send_error(context, message, request_key):
     """
     Write an error response to the network.
     """
@@ -82,50 +84,57 @@ def _send_error(context, message):
         context.set(
             RESPONSE,
             m(status=500,
-              body=message)))
+              body=message)),
+        request_key)
 
 
-def _enter_nevow(context):
+def _enter_nevow(request_key):
     """
-    Enter stage for Nevow interceptor.
+    Enter stage factory for Nevow interceptor.
 
     Extract information from a Nevow request into an immutable data structure.
     """
-    return context.set(
-        REQUEST,
-        _nevow_request_to_request_map(context[NEVOW_REQUEST]))
+    def _inner(context):
+        return context.set(
+            REQUEST,
+            _nevow_request_to_request_map(context[request_key]))
+    return _inner
 
 
-def _leave_nevow(context):
+def _leave_nevow(request_key):
     """
-    Leave stage for Nevow interceptor.
+    Leave stage factory for Nevow interceptor.
 
     Set the HTTP status code, any response headers and write the body (`bytes`
     or `Deferred`) to the network. If ``RESPONSE`` is notexistent, an HTTP 500
     error is written to the network instead.
     """
-    def _leave(body, context):
-        context = context.set('body', body)
-        _send_response(context)
+    def _inner(context):
+        def _leave(body, context):
+            context = context.set('body', body)
+            _send_response(context, request_key)
+            return context
+
+        response = context.get(RESPONSE)
+        if response is None:
+            _send_error(context, 'Internal server error: no response')
+            return succeed(context)
+        body = response.get('body')
+        d = body if isinstance(body, Deferred) else succeed(body)
+        d.addCallback(_leave, context)
+        return d
+    return _inner
+
+
+def _error_nevow(request_key):
+    """
+    Error stage factory for Nevow interceptor.
+    """
+    def _inner(context, error):
+        # XXX: log error
+        _send_error(context, 'Internal server error: exception', request_key)
         return context
-
-    response = context.get(RESPONSE)
-    if response is None:
-        _send_error(context, 'Internal server error: no response')
-        return succeed(context)
-    body = response.get('body')
-    d = body if isinstance(body, Deferred) else succeed(body)
-    d.addCallback(_leave, context)
-    return d
-
-
-def _error_nevow(context, error):
-    """
-    Error stage for Nevow interceptor.
-    """
-    # XXX: log error
-    _send_error(context, 'Internal server error: exception')
-    return context
+    return _inner
 
 
 def nevow():
@@ -137,9 +146,9 @@ def nevow():
     """
     return Interceptor(
         name='nevow',
-        enter=_enter_nevow,
-        leave=_leave_nevow,
-        error=_error_nevow)
+        enter=_enter_nevow(NEVOW_REQUEST),
+        leave=_leave_nevow(NEVOW_REQUEST),
+        error=_error_nevow(NEVOW_REQUEST))
 
 
 __all__ = ['nevow', 'NEVOW_REQUEST']
