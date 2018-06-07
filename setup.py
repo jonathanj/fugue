@@ -52,7 +52,6 @@ setup(
         ],
     extras_require={
         'test': [
-            'Nevow>=0.14.3',
             'testrepository>=0.0.20',
             'testtools>=2.3.0',
             ],
