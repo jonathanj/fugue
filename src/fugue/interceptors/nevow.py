@@ -94,11 +94,11 @@ def _enter_nevow(request_key):
 
     Extract information from a Nevow request into an immutable data structure.
     """
-    def _inner(context):
+    def _enter_nevow_inner(context):
         return context.set(
             REQUEST,
             _nevow_request_to_request_map(context[request_key]))
-    return _inner
+    return _enter_nevow_inner
 
 
 def _leave_nevow(request_key):
@@ -109,7 +109,7 @@ def _leave_nevow(request_key):
     or `Deferred`) to the network. If ``RESPONSE`` is notexistent, an HTTP 500
     error is written to the network instead.
     """
-    def _inner(context):
+    def _leave_nevow_inner(context):
         def _leave(body, context):
             context = context.set('body', body)
             _send_response(context, request_key)
@@ -124,18 +124,18 @@ def _leave_nevow(request_key):
         d = body if isinstance(body, Deferred) else succeed(body)
         d.addCallback(_leave, context)
         return d
-    return _inner
+    return _leave_nevow_inner
 
 
 def _error_nevow(request_key):
     """
     Error stage factory for Nevow interceptor.
     """
-    def _inner(context, error):
+    def _error_nevow_inner(context, error):
         # XXX: log error
         _send_error(context, 'Internal server error: exception', request_key)
         return context
-    return _inner
+    return _error_nevow_inner
 
 
 def nevow():
