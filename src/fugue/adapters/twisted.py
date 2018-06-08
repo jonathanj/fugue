@@ -21,6 +21,9 @@ class _TwistedAdapterResource(object):
         execute(context, v(twisted()) + self._interceptors)
         return NOT_DONE_YET
 
+    def putChild(self, path, child):
+        raise NotImplementedError
+
 
 def twisted_adapter_resource(interceptors=v()):
     """
