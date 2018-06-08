@@ -15,6 +15,9 @@ _ns = namespace(__name__)
 NEVOW_REQUEST = _ns('request')
 
 
+_noop = lambda *a, **kw: None
+
+
 def _get_headers(headers, name, default=None):
     """
     All values for a header by name.
@@ -64,7 +67,7 @@ def _nevow_request_to_request_map(req):
     )
 
 
-def _send_response(context, request_key):
+def _send_response(context, request_key, finish):
     """
     Write a response to the network.
     """
@@ -74,9 +77,10 @@ def _send_response(context, request_key):
     for k, v in response.get('headers', []):
         req.responseHeaders.setRawHeaders(k, v)
     req.write(response['body'])
+    finish(context)
 
 
-def _send_error(context, message, request_key):
+def _send_error(context, message, request_key, finish):
     """
     Write an error response to the network.
     """
@@ -85,7 +89,8 @@ def _send_error(context, message, request_key):
             RESPONSE,
             m(status=500,
               body=message)),
-        request_key)
+        request_key,
+        finish)
 
 
 def _enter_nevow(request_key):
@@ -101,7 +106,7 @@ def _enter_nevow(request_key):
     return _enter_nevow_inner
 
 
-def _leave_nevow(request_key):
+def _leave_nevow(request_key, finish=_noop):
     """
     Leave stage factory for Nevow interceptor.
 
@@ -112,13 +117,13 @@ def _leave_nevow(request_key):
     def _leave_nevow_inner(context):
         def _leave(body, context):
             context = context.set('body', body)
-            _send_response(context, request_key)
+            _send_response(context, request_key, finish)
             return context
 
         response = context.get(RESPONSE)
         if response is None:
             _send_error(
-                context, 'Internal server error: no response', request_key)
+                context, 'Internal server error: no response', request_key, finish)
             return succeed(context)
         body = response.get('body')
         d = body if isinstance(body, Deferred) else succeed(body)
@@ -127,13 +132,13 @@ def _leave_nevow(request_key):
     return _leave_nevow_inner
 
 
-def _error_nevow(request_key):
+def _error_nevow(request_key, finish=_noop):
     """
     Error stage factory for Nevow interceptor.
     """
     def _error_nevow_inner(context, error):
         # XXX: log error
-        _send_error(context, 'Internal server error: exception', request_key)
+        _send_error(context, 'Internal server error: exception', request_key, finish)
         return context
     return _error_nevow_inner
 

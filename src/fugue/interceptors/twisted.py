@@ -6,32 +6,16 @@ _ns = namespace(__name__)
 TWISTED_REQUEST = _ns('request')
 
 
-_enter_twisted = _enter_nevow(TWISTED_REQUEST)
-
-
 def _finish_request(context):
     context.get(TWISTED_REQUEST).finish()
     return context
 
 
-def _leave_twisted(context):
-    """
-    Leave stage for Twisted interceptor.
+_enter_twisted = _enter_nevow(TWISTED_REQUEST)
 
-    Adds a callback to `_leave_nevow` that calls ``finish`` on the request.
-    """
-    d = _leave_nevow(TWISTED_REQUEST)(context)
-    d.addCallback(_finish_request)
-    return d
+_leave_twisted = _leave_nevow(TWISTED_REQUEST, finish=_finish_request)
 
-
-def _error_twisted(context, error):
-    """
-    Error stage for Twisted interceptor.
-
-    Adds a callback to `_error_nevow` that calls ``finish`` on the request.
-    """
-    return _finish_request(_error_nevow(TWISTED_REQUEST)(context, error))
+_error_twisted = _error_nevow(TWISTED_REQUEST, finish=_finish_request)
 
 
 def twisted():
