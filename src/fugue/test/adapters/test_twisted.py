@@ -32,5 +32,6 @@ class TwistedAdapterResourceTests(TestCase):
         self.assertThat(
             requests,
             MatchesListwise([Contains(TWISTED_REQUEST)]))
-        self.assertThat(request.finish_count,
-                        Equals(1))
+        self.assertThat(
+            request.finish_count,
+            Equals(1))
