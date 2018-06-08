@@ -113,7 +113,7 @@ Adapters
 Adapters are the mechanism that bind the external world (such as a web server)
 to the internal world of interceptors. If interceptors consume and produce
 immutable data via the context map then adapters transform some external
-information—an HTTP request, for example—to and from that pure data.
+information (such as an HTTP request) to and from that pure data.
 
 Fugue provides a Twisted Web adapter in the form of an `IResource`_, the effect
 of this adapter is to act as a leaf resource—meaning Twisted performs no child
