@@ -170,7 +170,7 @@ arbitrarily add new keys that should be preserved.
 ================ =============
  Key              Description
 ================ =============
-``ERROR``        An object indicating a `Failure_`, in ``failure`` attribute.
+``ERROR``        An object indicating a `Failure`_, in a ``failure`` attribute.
 ``EXECUTION_ID`` A unique identifier set when the chain is executed.
 ``QUEUE``        The interceptors left to execute, should be manipulated by
                  ``enqueue``, ``terminate`` and ``terminate_when``.
@@ -182,9 +182,9 @@ arbitrarily add new keys that should be preserved.
 HTTP context map
 ^^^^^^^^^^^^^^^^
 
-When used with Fugue's HTTP request handling the following a ``REQUEST`` and
-``RESPONSE`` key will be present, containing information about the request to
-process and the response to return.
+When using Fugue's HTTP request handling the ``REQUEST`` and ``RESPONSE`` keys
+will be present, containing information about the request to process and the
+response to return.
 
 The request map is attached before the first interceptor is executed, it
 describes the incoming HTTP request:
@@ -227,6 +227,11 @@ Adapters are the mechanism that bind the external world (such as a web server)
 to the internal world of interceptors. If interceptors consume and produce
 immutable data via the context map then adapters transform some external
 information (such as an HTTP request) to and from that pure data.
+
+This way the majority of the request processing (including application logic) is
+unconcerned with the particular web server implementation, the adapter enqueues
+the necessary interceptor to transform incoming HTTP requests into data and
+outgoing data into HTTP responses.
 
 Fugue provides a Twisted Web adapter in the form of an `IResource`_, the effect
 of this adapter is to act as a leaf resource—meaning Twisted performs no child
