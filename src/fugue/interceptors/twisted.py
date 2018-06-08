@@ -7,6 +7,9 @@ TWISTED_REQUEST = _ns('request')
 
 
 def _finish_request(context):
+    """
+    Calls ``finish`` on the Twisted request.
+    """
     context.get(TWISTED_REQUEST).finish()
     return context
 
