@@ -14,7 +14,7 @@ def fakeTwistedRequest(*args, **kwargs):
         request.finish_count = 0
         return _inner
 
-    kwargs.setdefault('request', Request)
+    kwargs.setdefault('Request', lambda channel: Request(channel=channel, queued=False))
     request = fakeNevowRequest(*args, **kwargs)
     request.finish = _finish(request)
     return request
