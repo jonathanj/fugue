@@ -22,7 +22,7 @@ class _TwistedAdapterResource(object):
         return NOT_DONE_YET
 
     def putChild(self, path, child):
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 def twisted_adapter_resource(interceptors=v()):
