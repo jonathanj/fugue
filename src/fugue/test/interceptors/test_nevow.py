@@ -12,14 +12,15 @@ NevowRequest = try_import('nevow.appserver.NevowRequest')
 
 
 def fakeNevowRequest(method='GET', body=b'', is_secure=False,
-                     uri=b'http://example.com/one', request_headers=None):
+                     uri=b'http://example.com/one', request_headers=None,
+                     Request=NevowRequest):
     """
     Create a fake `NevowRequest` instance for the purposes of testing.
     """
     channel = DummyChannel()
     if is_secure:
         channel.transport = DummyChannel.SSL()
-    request = NevowRequest(channel=channel)
+    request = Request(channel=channel)
     request.method = method
     request.uri = uri
     request.client = channel.transport.getPeer()
