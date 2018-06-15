@@ -1,6 +1,6 @@
 from pyrsistent import v
 from testtools import TestCase
-from testtools.matchers import ContainsDict, Equals, Is, MatchesStructure
+from testtools.matchers import ContainsDict, Equals, Is
 from testtools.twistedsupport import succeeded
 
 from fugue._keys import REQUEST, RESPONSE
@@ -12,31 +12,6 @@ from fugue.test.test_chain import empty_context, thrower, Traced, tracer, tracin
 
 
 VALUE = 'value'
-
-
-def add(n):
-    return lambda ctx: ctx.transform([VALUE], lambda x: (x or 0) + n)
-
-
-def mul(n):
-    return lambda ctx: ctx.transform([VALUE], lambda x: (x or 0) * n)
-
-
-def interceptor_name_test(wrapper, *a, **kw):
-    """
-    """
-    def _name_test(fn):
-        def _test(self):
-            self.assertThat(
-                wrapper(fn),
-                MatchesStructure(
-                    name=Equals(repr(fn))))
-            self.assertThat(
-                wrapper(fn, name='custom_name'),
-                MatchesStructure(
-                    name=Equals('custom_name')))
-        return _test
-    return _name_test
 
 
 class BeforeTests(TestCase):
