@@ -5,7 +5,7 @@ from testtools.twistedsupport import succeeded
 from fugue.adapters.nevow import nevow_adapter_resource
 from fugue.interceptors import before
 from fugue.interceptors.nevow import NEVOW_REQUEST
-from fugue.test.interceptors.test_nevow import fakeNevowRequest
+from fugue.test.interceptors.test_nevow import fake_nevow_request
 from fugue.test.util import depends_on
 
 
@@ -40,7 +40,7 @@ class NevowAdapterResourceTests(TestCase):
         requests = []
         resource = nevow_adapter_resource([_spy(requests)])
         self.assertThat(
-            resource.renderHTTP(fakeNevowRequest()),
+            resource.renderHTTP(fake_nevow_request()),
             succeeded(Equals(b'')))
         self.assertThat(
             requests,
