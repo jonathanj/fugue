@@ -1,6 +1,7 @@
 from pyrsistent import field, PRecord
 
 from fugue._keys import REQUEST, RESPONSE
+from fugue.util import callable_name
 
 
 class Interceptor(PRecord):
@@ -11,7 +12,7 @@ class Interceptor(PRecord):
     is invoked with the context (and an `Error`, for the error stage) and is
     expected to return a context or a `Deferred` that returns a context.
     """
-    name = field(mandatory=True, type=(str, unicode))
+    name = field(mandatory=True, type=(bytes, unicode))
     enter = field(initial=None)
     leave = field(initial=None)
     error = field(initial=None)
@@ -21,7 +22,7 @@ def _interceptor_func_name(*fs):
     """
     Derive an interceptor name from one or more functions.
     """
-    return u' & '.join(repr(f) for f in fs)
+    return u' & '.join(callable_name(f) for f in fs if f)
 
 
 def error_handler(f, name=None):
