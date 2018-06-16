@@ -95,15 +95,13 @@ def _try_error(context, interceptor):
     :return: Updated context.
     """
     def _eb(f, context, error):
-        # XXX: Hmm. Is this a useful check?
-        if f.type is error.failure.type:
-            return succeed(context)
-        else:
-            # XXX: Update the error with the new interceptor that tried to handle it?
-            return succeed(
-                context.transform(
-                    [SUPPRESSED],
-                    lambda xs: (xs or v()).append(f)))
+        return succeed(
+            context.transform(
+                [ERROR], lambda _: Error(failure=f,
+                                         execution_id=context[EXECUTION_ID],
+                                         interceptor=interceptor.name,
+                                         stage='error'),
+                [SUPPRESSED], lambda xs: (xs or v()).append(error)))
     stage = 'error'
     fn = getattr(interceptor, stage, None)
     if fn is None:
