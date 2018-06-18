@@ -249,10 +249,39 @@ being adapted.
 Example
 -------
 
-A basic HTTP API that returns a personal greeting based on a URL path:
+A `basic HTTP API example`_ that returns a personal greeting based on a URL path:
 
-.. literalinclude:: examples/twisted_greet.py
-   :language: python
+.. This should be a literal include, but those are prohibited by Github's
+   processors for security reasons.
+
+.. code-block:: python
+
+   from pyrsistent import m
+   from fugue.interceptors.http import route
+   from fugue.interceptors.http.route import GET
+   from fugue.adapters.twisted import twisted_adapter_resource
+   
+   
+   # Define a helper to construct HTTP 200 responses.
+   def ok(body):
+       return m(status=200, body=body.encode('utf-8'))
+   
+   # Define the handler behaviour.
+   def greet(request):
+       name = request['path_params']['name']
+       return ok(u'Hello, {}!'.format(name))
+   
+   # Declare the route.
+   interceptor = route.router(
+       ('/greet/:name', GET, greet))
+   
+   # Create a Twisted Web resource that will execute the interceptor chain.
+   resource = twisted_adapter_resource([interceptor])
+   
+   # Run the script from a Fugue checkout:
+   # twistd -n web --resource-script=examples/twisted_greet.py
+
+.. _basic HTTP API example: https://github.com/jonathanj/fugue/blob/master/examples/twisted_greet.py
 
 
 ------------
