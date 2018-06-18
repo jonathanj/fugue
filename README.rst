@@ -278,8 +278,15 @@ A `basic HTTP API example`_ that returns a personal greeting based on a route:
    # Create a Twisted Web resource that will execute the interceptor chain.
    resource = twisted_adapter_resource([interceptor])
    
-   # Run the script from a Fugue checkout:
-   # twistd -n web --resource-script=examples/twisted_greet.py
+Executing the example:
+
+.. code-block:: shell
+
+   # Run the script from a Fugue checkout.
+   $ twistd -n web --resource-script=examples/twisted_greet.py
+   # Use the service.
+   $ curl 'http://localhost:8080/greet/Bob'
+   Hello, Bob!
 
 .. _basic HTTP API example: https://github.com/jonathanj/fugue/blob/master/examples/twisted_greet.py
 
