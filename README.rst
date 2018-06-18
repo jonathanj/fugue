@@ -245,6 +245,16 @@ being adapted.
 .. _IResource: https://twistedmatrix.com/documents/current/api/twisted.web.resource.IResource.html
 
 
+-------
+Example
+-------
+
+A basic HTTP API that returns a personal greeting based on a URL path:
+
+.. literalinclude:: examples/twisted_greet.py
+   :language: python
+
+
 ------------
 Installation
 ------------

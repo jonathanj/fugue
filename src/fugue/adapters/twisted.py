@@ -24,6 +24,12 @@ class _TwistedAdapterResource(object):
     def putChild(self, path, child):
         raise NotImplementedError()
 
+    def getChildWithDefault(self, path, request):
+        # When this resource is the root resource, for example when using
+        # `twistd web --resource-script`, this function will be called despite
+        # being a leaf resource.
+        return self
+
 
 def twisted_adapter_resource(interceptors=v()):
     """

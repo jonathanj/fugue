@@ -1,3 +1,26 @@
+"""
+============
+HTTP Routing
+============
+
+A HTTP `router` is an interceptor that enqueues other interceptors based on
+whether certain aspects of an HTTP request match. The criteria of that match is
+defined by a `route`. URL paths, HTTP request method, etc. may all be criteria
+for a route.
+
+Routes can match specific path segments by using a colon (``:``) prefix format,
+for example: ``/user/:id`` will match ``/user/bob`` with ``bob`` as the ``id``
+path parameter. Wildcards can be used to consume all remaining segments, for
+example ``/user/*rest`` will match ``/user/bob/pa/th`` with ``bob/pa/th`` as
+the ``rest`` path parameter.
+
+A route may specify an iterable of interceptors to enqueue, a single
+interceptor or a single function (to be wrapped by the `handler` interceptor.)
+
+A route must have a unique name, if one is not explicitly provided the name
+will be inferred from the last interceptor's name; this does not guarantee a
+unique name but is probably good enough for most situations.
+"""
 import collections
 import re
 import types
@@ -145,8 +168,10 @@ def route(path, method, interceptors, name=None):
     and wildcards (Rails-like syntax). For example: ``/users/:id/*rest``
     :param unicode method: Request method to match, with the special case of
     ``'ANY'`` to match any method.
-    :type interceptors: Iterable[`Interceptor`]
-    :param interceptors: Interceptors to enqueue when matching this route.
+    :type interceptors: Iterable[`Interceptor`] or Callable[[pmap], Any]
+    :param interceptors: Interceptors to enqueue when matching this route, or a
+    single function accepting the ``REQUEST`` value and returning a
+    ``RESPONSE`` value.
     :param unicode name: Route name, derived from the last interceptor's name
     if ``None``.
     :rtype: Route
