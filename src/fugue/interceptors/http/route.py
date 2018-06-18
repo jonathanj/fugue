@@ -151,7 +151,7 @@ def _conform_interceptor(interceptor, name, nesting=False):
         if nesting is True:
             raise TypeError('Interceptors must not be nested', interceptor)
         results = zip(
-            *(_conform_interceptor(i, name, True) for i in interceptor))
+            *[_conform_interceptor(i, name, True) for i in interceptor])
         if not results:
             raise ValueError('No interceptors specified')
         interceptors, names = results
