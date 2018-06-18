@@ -249,7 +249,7 @@ being adapted.
 Example
 -------
 
-A `basic HTTP API example`_ that returns a personal greeting based on a URL path:
+A `basic HTTP API example`_ that returns a personal greeting based on a route:
 
 .. This should be a literal include, but those are prohibited by Github's
    processors for security reasons.
