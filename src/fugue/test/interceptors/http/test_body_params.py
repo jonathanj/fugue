@@ -66,10 +66,7 @@ class JSONBodyParamsTests(TestCase):
         Construct the request map, including the payload.
         """
         def _json_dump(*a, **kw):
-            res = json.dumps(*a, **kw)
-            if isinstance(res, bytes):
-                res = res.decode('ascii')
-            return res.encode('utf-8')
+            return json.dumps(*a, **kw).encode('utf-8')
         return m(
             content_type='application/json; charset="utf-8"',
             character_encoding='utf-8',

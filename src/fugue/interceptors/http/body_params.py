@@ -21,11 +21,10 @@ def _parser_for(parsers, content_type):
     :return: Callable to parse the content, falls back to the identity
     function.
     """
-    if content_type:
-        for expr, parser in parsers.items():
-            # XXX: Pedestal uses regexps instead of strings to match, why?
-            if expr == content_type:
-                return parser
+    for expr, parser in parsers.items():
+        # XXX: Pedestal uses regexps instead of strings to match, why?
+        if expr == content_type:
+            return parser
     return identity
 
 

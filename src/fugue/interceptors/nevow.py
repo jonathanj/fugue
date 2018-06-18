@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import cgi
 
 from hyperlink import URL
-from pyrsistent import freeze, m
+from pyrsistent import freeze, m, thaw
 from twisted.internet.defer import Deferred, succeed
 
 from fugue._keys import REQUEST, RESPONSE
@@ -83,8 +83,10 @@ def _send_response(context, request_key, finish):
     req = context[request_key]
     response = context[RESPONSE]
     req.setResponseCode(response['status'])
-    for k, v in response.get('headers', []):
-        req.responseHeaders.setRawHeaders(k, v)
+    for k, v in response.get('headers', {}).items():
+        if isinstance(v, (str, unicode)):
+            v = [v]
+        req.responseHeaders.setRawHeaders(k, thaw(v))
     req.write(response['body'])
     finish(context)
 
@@ -93,6 +95,7 @@ def _send_error(context, message, request_key, finish):
     """
     Write an error response to the network.
     """
+    print 'lel', context
     _send_response(
         context.set(
             RESPONSE,
@@ -132,7 +135,10 @@ def _leave_nevow(request_key, finish=_noop):
         response = context.get(RESPONSE)
         if response is None:
             _send_error(
-                context, 'Internal server error: no response', request_key, finish)
+                context,
+                'Internal server error: no response',
+                request_key,
+                finish)
             return succeed(context)
         body = response.get('body')
         d = body if isinstance(body, Deferred) else succeed(body)
@@ -147,7 +153,11 @@ def _error_nevow(request_key, finish=_noop):
     """
     def _error_nevow_inner(context, error):
         # XXX: log error
-        _send_error(context, 'Internal server error: exception', request_key, finish)
+        _send_error(
+            context,
+            'Internal server error: exception',
+            request_key,
+            finish)
         return context
     return _error_nevow_inner
 

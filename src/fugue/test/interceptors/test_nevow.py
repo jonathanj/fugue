@@ -28,7 +28,8 @@ def fake_nevow_request(method='GET', body=b'', is_secure=False,
     request.clientproto = b'HTTP/1.1'
     request.client = channel.transport.getPeer()
     content_length = len(body)
-    request.requestHeaders.setRawHeaders('host', [uri.host.encode('utf-8')])
+    request.requestHeaders.setRawHeaders(
+        'host', [uri.authority().encode('utf-8')])
     request.requestHeaders.setRawHeaders('content-length', [content_length])
     if request_headers:
         for k, v in request_headers.items():
@@ -66,6 +67,21 @@ class NevowRequestToRequestMapTests(TestCase):
                 'server_port': Equals(80),
                 'scheme': Equals(b'http'),
                 'uri': Equals(URL.from_text(u'/one'))}))
+
+    @depends_on('nevow')
+    def test_non_standard_port(self):
+        """
+        Parse a non-standard port from the ``Host`` header.
+        """
+        request = fake_nevow_request(uri=u'http://example.com:5144/')
+        self.assertThat(
+            _nevow_request_to_request_map(request),
+            ContainsDict({
+                'headers': ContainsDict(
+                    {b'Host': Equals([b'example.com:5144'])}),
+                'server_name': Equals(b'example.com'),
+                'server_port': Equals(5144)}))
+
 
     @depends_on('nevow')
     def test_scheme(self):
