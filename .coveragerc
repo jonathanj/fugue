@@ -1,0 +1,15 @@
+[run]
+branch = True
+source = fugue
+omit =
+    src/fugue/_version.py
+
+[paths]
+source =
+    src/fugue
+    .tox/*/lib/python*/site-packages/fugue
+    .tox/*/site-packages/fugue
+
+[report]
+omit =
+    src/fugue/_version.py
