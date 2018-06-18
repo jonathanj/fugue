@@ -5,7 +5,7 @@ from twisted.web.server import NOT_DONE_YET
 from fugue.adapters.twisted import twisted_adapter_resource
 from fugue.interceptors import before
 from fugue.interceptors.twisted import TWISTED_REQUEST
-from fugue.test.interceptors.test_twisted import fakeTwistedRequest
+from fugue.test.interceptors.test_twisted import fake_twisted_request
 
 
 class TwistedAdapterResourceTests(TestCase):
@@ -14,8 +14,9 @@ class TwistedAdapterResourceTests(TestCase):
     """
     def test_twisted_request(self):
         """
-        Rendering the resource returns a successful deferred and inserted a
-        `TWISTED_REQUEST` value into the context and that `finish` is called.
+        Rendering the resource returns a successful deferred, inserts a
+        `TWISTED_REQUEST` value into the context and calls ``finish`` on the
+        request.
         """
         def _spy(res):
             def _spy_inner(context):
@@ -24,7 +25,7 @@ class TwistedAdapterResourceTests(TestCase):
             return before(_spy_inner)
 
         requests = []
-        request = fakeTwistedRequest()
+        request = fake_twisted_request()
         resource = twisted_adapter_resource([_spy(requests)])
         self.assertThat(
             resource.render(request),
@@ -33,5 +34,5 @@ class TwistedAdapterResourceTests(TestCase):
             requests,
             MatchesListwise([Contains(TWISTED_REQUEST)]))
         self.assertThat(
-            request.finish_count,
+            next(request.finish.counter),
             Equals(1))

@@ -38,8 +38,8 @@ Interceptors are the foundation of Fugue, and most of the library is dedicated
 to providing interceptors that are useful for building HTTP services.
 
 An interceptor is a pair of unary functions that accept a `context map`_—an
-immutable data structure—and must eventually return a context map. One function,
-``enter``, is called on the way "in" and another, ``leave``, is called on the
+immutable data structure—and must eventually return a context map. One function
+(``enter``) is called on the way "in" and another (``leave``) is called on the
 way "out". Either function may be omitted and the effect is that the context map
 remains unchanged.
 
@@ -243,6 +243,52 @@ An adapter has no formal structure since the coupling will depend on what is
 being adapted.
 
 .. _IResource: https://twistedmatrix.com/documents/current/api/twisted.web.resource.IResource.html
+
+
+-------
+Example
+-------
+
+A `basic HTTP API example`_ that returns a personal greeting based on a route:
+
+.. This should be a literal include, but those are prohibited by Github's
+   processors for security reasons.
+
+.. code-block:: python
+
+   from pyrsistent import m
+   from fugue.interceptors.http import route
+   from fugue.interceptors.http.route import GET
+   from fugue.adapters.twisted import twisted_adapter_resource
+   
+   
+   # Define a helper to construct HTTP 200 responses.
+   def ok(body):
+       return m(status=200, body=body.encode('utf-8'))
+   
+   # Define the handler behaviour.
+   def greet(request):
+       name = request['path_params']['name']
+       return ok(u'Hello, {}!'.format(name))
+   
+   # Declare the route.
+   interceptor = route.router(
+       (u'/greet/:name', GET, greet))
+   
+   # Create a Twisted Web resource that will execute the interceptor chain.
+   resource = twisted_adapter_resource([interceptor])
+   
+Executing the example:
+
+.. code-block:: shell
+
+   # Run the script from a Fugue checkout.
+   $ twistd -n web --resource-script=examples/twisted_greet.py
+   # Use the service.
+   $ curl 'http://localhost:8080/greet/Bob'
+   Hello, Bob!
+
+.. _basic HTTP API example: https://github.com/jonathanj/fugue/blob/master/examples/twisted_greet.py
 
 
 ------------

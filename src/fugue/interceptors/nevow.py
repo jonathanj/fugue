@@ -8,7 +8,7 @@ from twisted.internet.defer import Deferred, succeed
 
 from fugue._keys import REQUEST, RESPONSE
 from fugue.interceptors.basic import Interceptor
-from fugue.util import namespace
+from fugue.util import namespace, url_path
 
 
 _ns = namespace(__name__)
@@ -48,6 +48,16 @@ def _nevow_request_to_request_map(req):
     """
     headers = req.requestHeaders
     content_type, character_encoding = _get_content_type(headers)
+    iri = URL.from_text(req.uri.decode('utf-8')).to_iri()
+    host = _get_first_header(headers, b'host').decode('utf-8')
+    scheme = u'https' if req.isSecure() else u'http'
+    if u':' in host:
+        host, port = host.split(u':', 1)
+        port = int(port)
+    else:
+        port = {
+            u'https': 443,
+            u'http': 80}.get(scheme)
     return m(
         body=req.content,
         content_type=content_type,
@@ -56,15 +66,14 @@ def _nevow_request_to_request_map(req):
         headers=freeze(dict(headers.getAllRawHeaders())),
         remote_addr=req.getClientIP(),
         request_method=req.method,
-        server_name=req.getRequestHostname(),
-        server_port=req.host.port,
-        scheme=b'https' if req.isSecure() else b'http',
+        server_name=host,
+        server_port=port,
+        scheme=scheme,
         #ssl_client_cert=XXX,
-        uri=URL.from_text(req.uri.decode('ascii')),
+        uri=iri,
         #query_string
-        #path_info
-        #protocol
-    )
+        path_info=url_path(iri),
+        protocol=getattr(req, 'clientproto', None))
 
 
 def _send_response(context, request_key, finish):
@@ -111,7 +120,7 @@ def _leave_nevow(request_key, finish=_noop):
     Leave stage factory for Nevow interceptor.
 
     Set the HTTP status code, any response headers and write the body (`bytes`
-    or `Deferred`) to the network. If ``RESPONSE`` is notexistent, an HTTP 500
+    or `Deferred`) to the network. If ``RESPONSE`` is nonexistent, an HTTP 500
     error is written to the network instead.
     """
     def _leave_nevow_inner(context):

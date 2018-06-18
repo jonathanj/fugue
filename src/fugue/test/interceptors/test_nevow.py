@@ -6,26 +6,29 @@ from twisted.web.test.requesthelper import DummyChannel
 
 from fugue.interceptors.nevow import _nevow_request_to_request_map
 from fugue.test.util import depends_on
+from fugue.util import url_path
 
 
 NevowRequest = try_import('nevow.appserver.NevowRequest')
 
 
-def fakeNevowRequest(method='GET', body=b'', is_secure=False,
-                     uri=b'http://example.com/one', request_headers=None,
-                     Request=NevowRequest):
+def fake_nevow_request(method='GET', body=b'', is_secure=False,
+                       uri=b'http://example.com/one', request_headers=None,
+                       Request=NevowRequest):
     """
     Create a fake `NevowRequest` instance for the purposes of testing.
     """
+    uri = URL.from_text(uri.decode('utf-8')).to_uri()
     channel = DummyChannel()
     if is_secure:
         channel.transport = DummyChannel.SSL()
     request = Request(channel=channel)
     request.method = method
-    request.uri = uri
+    request.uri = url_path(uri)
+    request.clientproto = b'HTTP/1.1'
     request.client = channel.transport.getPeer()
-    request.host = channel.transport.getHost()
     content_length = len(body)
+    request.requestHeaders.setRawHeaders('host', [uri.host.encode('utf-8')])
     request.requestHeaders.setRawHeaders('content-length', [content_length])
     if request_headers:
         for k, v in request_headers.items():
@@ -45,7 +48,7 @@ class NevowRequestToRequestMapTests(TestCase):
         """
         Test basic request map keys.
         """
-        request = fakeNevowRequest(request_headers={
+        request = fake_nevow_request(request_headers={
             b'x-foo': [b'bar'],
         })
         self.assertThat(
@@ -55,13 +58,14 @@ class NevowRequestToRequestMapTests(TestCase):
                 'content_length': Equals(0),
                 'character_encoding': Is(None),
                 'headers': Equals({b'Content-Length': [0],
-                                   b'X-Foo': [b'bar']}),
+                                   b'X-Foo': [b'bar'],
+                                   b'Host': [b'example.com']}),
                 'remote_addr': Equals(b'192.168.1.1'),
                 'request_method': Equals(b'GET'),
-                'server_name': Equals(b'10.0.0.1'),
+                'server_name': Equals(b'example.com'),
                 'server_port': Equals(80),
                 'scheme': Equals(b'http'),
-                'uri': Equals(URL.from_text(u'http://example.com/one'))}))
+                'uri': Equals(URL.from_text(u'/one'))}))
 
     @depends_on('nevow')
     def test_scheme(self):
@@ -70,12 +74,12 @@ class NevowRequestToRequestMapTests(TestCase):
         """
         self.assertThat(
             _nevow_request_to_request_map(
-                fakeNevowRequest(is_secure=False)),
+                fake_nevow_request(is_secure=False)),
             ContainsDict({
                 'scheme': Equals(b'http')}))
         self.assertThat(
             _nevow_request_to_request_map(
-                fakeNevowRequest(is_secure=True)),
+                fake_nevow_request(is_secure=True)),
             ContainsDict({
                 'scheme': Equals(b'https')}))
 
@@ -84,7 +88,7 @@ class NevowRequestToRequestMapTests(TestCase):
         """
         ``Content-Type`` header is extracted.
         """
-        request = fakeNevowRequest(request_headers={
+        request = fake_nevow_request(request_headers={
             b'content-type': [b'text/plain;charset=utf-8'],
         })
         self.assertThat(
@@ -97,7 +101,7 @@ class NevowRequestToRequestMapTests(TestCase):
         """
         Character encoding is extracted from ``Content-Type``, if available.
         """
-        request = fakeNevowRequest(request_headers={
+        request = fake_nevow_request(request_headers={
             b'content-type': [b'text/plain;charset=utf-8'],
         })
         self.assertThat(
@@ -110,7 +114,7 @@ class NevowRequestToRequestMapTests(TestCase):
         """
         ``body`` is a file-like containing the request content.
         """
-        request = fakeNevowRequest(body=b'hello')
+        request = fake_nevow_request(body=b'hello')
         self.assertThat(
             _nevow_request_to_request_map(request),
             ContainsDict({

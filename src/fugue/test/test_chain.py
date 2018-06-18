@@ -2,7 +2,7 @@ from pyrsistent import dq, m, v
 from testtools import TestCase
 from testtools.matchers import AfterPreprocessing as After
 from testtools.matchers import (
-    AllMatch, Contains, ContainsDict, Equals, Is, Not)
+    AllMatch, Contains, ContainsDict, Equals, Is, MatchesStructure, Not)
 from testtools.twistedsupport import failed, has_no_result, succeeded
 from twisted.internet.defer import fail
 from twisted.internet.task import Clock, deferLater
@@ -10,6 +10,7 @@ from twisted.internet.task import Clock, deferLater
 from fugue.chain import (
     enqueue, execute, QUEUE, terminate, terminate_when, TERMINATORS)
 from fugue.interceptors import around
+from fugue.util import constantly
 
 
 empty_context = m()
@@ -67,8 +68,8 @@ class TerminateWhenTests(TestCase):
     """
     Tests for `terminate_when`.
     """
-    always = lambda ctx: True
-    never = lambda ctx: False
+    always = constantly(True)
+    never = constantly(False)
 
     def test_empty(self):
         """
@@ -140,7 +141,7 @@ def deferrer(marker, clock, delay):
         lambda context: trace(context, 'leave', marker))
 
 
-def thrower(marker):
+def thrower(marker):  # pragma: no cover
     """
     Tracing interceptor that raises an asynchronous exception.
     """
@@ -150,7 +151,7 @@ def thrower(marker):
         'thrower')
 
 
-def thrower_sync(marker):
+def thrower_sync(marker):  # pragma: no cover
     """
     Tracing interceptor that raises a synchronous exception.
     """
@@ -162,7 +163,7 @@ def thrower_sync(marker):
         'thrower_sync')
 
 
-def catcher(marker):
+def catcher(marker):  # pragma: no cover
     """
     Tracing interceptor that catches `TracingError`.
     """
@@ -174,6 +175,15 @@ def catcher(marker):
                                            marker,
                                            'from',
                                            error.failure.value.source)))
+    return tracer(marker).set('error', _error)
+
+
+def fumbling_catcher(marker):  # pragma: no cover
+    """
+    Tracing interceptor that fails to handle an error.
+    """
+    def _error(context, error):
+        return fail(TracingError(marker))
     return tracer(marker).set('error', _error)
 
 
@@ -260,6 +270,26 @@ class ExecuteTests(TestCase):
                              ('error', 'c', 'from', 'f'),
                              ('leave', 'b'),
                              ('leave', 'a'))})))
+
+    def test_error_fumble(self):
+        """
+        An interceptor that attempts but fails to handle an error, suppresses
+        the original error and presents the new error.
+        """
+        interceptors = [
+            tracer('a'),
+            tracer('b'),
+            fumbling_catcher('c'),
+            tracer('d'),
+            tracer('e'),
+            thrower('f'),
+            tracer('g')]
+        self.assertThat(
+            execute(empty_context, interceptors),
+            failed(
+                MatchesStructure(
+                    type=Is(TracingError),
+                    value=MatchesStructure(source=Equals('c')))))
 
     def test_deferred(self):
         """
