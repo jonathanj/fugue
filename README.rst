@@ -38,8 +38,8 @@ Interceptors are the foundation of Fugue, and most of the library is dedicated
 to providing interceptors that are useful for building HTTP services.
 
 An interceptor is a pair of unary functions that accept a `context map`_—an
-immutable data structure—and must eventually return a context map. One function,
-``enter``, is called on the way "in" and another, ``leave``, is called on the
+immutable data structure—and must eventually return a context map. One function
+(``enter``) is called on the way "in" and another (``leave``) is called on the
 way "out". Either function may be omitted and the effect is that the context map
 remains unchanged.
 
