@@ -15,7 +15,7 @@ def greet(request):
 
 # Declare the route.
 interceptor = route.router(
-    ('/greet/:name', GET, greet))
+    (u'/greet/:name', GET, greet))
 
 # Create a Twisted Web resource that will execute the interceptor chain.
 resource = twisted_adapter_resource([interceptor])
