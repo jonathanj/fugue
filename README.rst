@@ -30,6 +30,48 @@ kept small and isolated.
 .. _Pyrsistent: https://github.com/tobgu/pyrsistent
 
 
+----------
+Motivation
+----------
+
+The motivation for Fugue was heavily inspired by `Pedestal`_ and the idea of a
+more composable, functional, reusable way of describing a web application that
+can (hopefully!) remain simple to reason about and test even as application
+complexity grows.
+
+The goal for Fugue is to give web application developers the freedom to focus on
+the logic of their application and the ability to easily build up an applicaton
+out of small reusable functions, without having to concern themselves with the
+details of their web server.
+
+Twisted Web is a production-ready HTTP (and HTTP2!) server implemented in pure
+Python using `Twisted`_. It is mature, well supported and can be embedded (and
+customized!) in your Python application. `Nevow`_ is a web framework built on
+Twisted and Twisted Web, offering an HTTP server-push "widget" system, templates
+and other features.
+
+Nevow's resource model is very closely based on Twisted Web's but is
+unfortunately incompatible, Twisted Web's resource model was implemented nearly
+two decades ago and hasn't seen much change since then. Using it can be quite
+cumbersome for complex web applications, and understanding such a system tends
+to be even more difficult. Various attempts exist—`Klein`_, and even my
+`own`_—to improve the developer experience of using Twisted Web, often
+attempting to smooth over or hide as much of the resource model as possible.
+
+Ideally a web application developer would only concern themselves with
+processing some input data, applying some application / business logic to that
+data (possibly over several incremental steps) and producing an output. At the
+fringes of the application are the uninteresting, mechanical details: The
+resource model; writing a request back to the network; unserializing requests
+and serializing responses; and so forth.
+
+Maybe Fugue can be that ideal.
+
+.. _Nevow: https://github.com/twisted/nevow
+.. _Klein: https://github.com/twisted/klein
+.. _own: https://github.com/jonathanj/txspinneret
+
+
 ------------
 Interceptors
 ------------
